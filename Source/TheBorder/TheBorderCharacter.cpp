@@ -8,7 +8,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Engine/Classes/Kismet/GameplayStatics.h"
+#include "BorderSaveGame.h"
 #include "DrawDebugHelpers.h"
+#include "Engine.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ABorderCharacter
@@ -82,6 +85,9 @@ void ATheBorderCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATheBorderCharacter::Sprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATheBorderCharacter::StopSprint);
+
+	PlayerInputComponent->BindAction("Save", IE_Pressed, this, &ATheBorderCharacter::SaveGame);
+	PlayerInputComponent->BindAction("Load", IE_Pressed, this, &ATheBorderCharacter::LoadGame);
 
 	PlayerInputComponent->BindAction("Action", IE_Pressed, this, &ATheBorderCharacter::OnAction);
 
@@ -189,4 +195,26 @@ void ATheBorderCharacter::OnAction()
 	{
 		CurrentDoor->ToggleDoor();
 	}
+}
+//!!!Что то не сохраняет поворот в SaveGameInstance
+void ATheBorderCharacter::SaveGame()
+{
+	UBorderSaveGame* SaveGameInstance = Cast<UBorderSaveGame>(UGameplayStatics::CreateSaveGameObject(UBorderSaveGame::StaticClass()));
+	//Put into SaveGameInstance Statics
+	SaveGameInstance->PlayerLocation = this->GetActorLocation();
+	SaveGameInstance->PlayerRotation = this->GetActorRotation();
+	//Save the SaveGameInstance
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance,TEXT("SlotGame"),0);
+	//Log a message
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Game Saved"));
+}
+
+void ATheBorderCharacter::LoadGame()
+{
+	UBorderSaveGame* SaveGameInstance = Cast<UBorderSaveGame>(UGameplayStatics::CreateSaveGameObject(UBorderSaveGame::StaticClass()));
+	//load a saved game into savegame instance variable
+	SaveGameInstance = Cast<UBorderSaveGame>(UGameplayStatics::LoadGameFromSlot("SlotGame", 0));
+	this->SetActorLocation(SaveGameInstance->PlayerLocation);
+	this->SetActorRotation(SaveGameInstance->PlayerRotation);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Game Loaded"));
 }

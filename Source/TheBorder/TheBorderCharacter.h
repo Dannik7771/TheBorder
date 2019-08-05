@@ -76,6 +76,9 @@ protected:
 	// End of APawn interface
 
 	virtual void Tick(float DeltaSeconds) override;
+private:
+	void SaveGame();
+	void LoadGame();
 
 public:
 	/** Returns CameraBoom subobject **/
